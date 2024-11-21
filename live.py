@@ -11,7 +11,7 @@ import time
 
 
 SHOW_IMG_SHAPE = (600, 600)
-BIG_GRAPH_SCALE = 2
+BIG_GRAPH_SCALE = 4
 
 # https://stackoverflow.com/questions/57742442/how-to-get-the-height-of-a-tkinter-window-title-bar
 class BarHeight(Tk):
@@ -87,7 +87,10 @@ class SelectorGUI(BarHeight, RGBChecker):
 
 	def g(self, x, dots):
 		# 라그랑주 보간법
+		# dotSets = set([(dot[0] + 0.001*(i + 1), dot[1]) for i, dot in enumerate(dots)])
+		# exit()
 		dotSets = set(dots)
+		# print(dotSets)
 		# print(dots, dotSets)
 		sumOfValue = 0
 		for dot in dots:
@@ -101,7 +104,7 @@ class SelectorGUI(BarHeight, RGBChecker):
 				Bunja *= x - elses[0]
 				Bunmo *= dot[0] - elses[0]
 				if Bunmo == 0:
-					return 0
+					return None
 				# j = x - elses[0]
 				# k = dot[0] - elses[0]
 				# if j != 0:
@@ -177,24 +180,76 @@ class SelectorGUI(BarHeight, RGBChecker):
 				cv.line(graphBigImg2, (startPos[0] * BIG_GRAPH_SCALE, startPos[1] * BIG_GRAPH_SCALE), 
 									  (pos[0] * BIG_GRAPH_SCALE, pos[1] * BIG_GRAPH_SCALE), (255, 255, 255), 1)
 				startPos = pos
-			startX, endX = graphDots[0][0], graphDots[-1][0]
-			startPos = graphDots[0]
-			for x in range((endX - startX) * BIG_GRAPH_SCALE):
-				# print(graphDots)
-				graphY = int(self.g(startX + x / BIG_GRAPH_SCALE, graphDots) * BIG_GRAPH_SCALE)
-				# print(x, graphY)
-				try:
-					cv.line(graphBigImg, (startX * BIG_GRAPH_SCALE + x, graphY), (startX * BIG_GRAPH_SCALE + x, graphY), 255, 1)
-				except:
-					pass
-				# exit()
+			# startPos = graphDots[0]
+
+
+
+			# lastPos = (graphDots[0][0] * BIG_GRAPH_SCALE, graphDots[0][1] * BIG_GRAPH_SCALE)
+			# for x in range((endX - startX) * BIG_GRAPH_SCALE):
+			# 	# print(graphDots)
+			# 	graphY = self.g(startX + x / BIG_GRAPH_SCALE, graphDots)
+			# 	# if graphY == -1:
+			# 	# 	continue
+			# 	# print(x, graphY)
+
+			# 	try:
+			# 		cv.line(graphBigImg, lastPos, (startX * BIG_GRAPH_SCALE + x, int(graphY * BIG_GRAPH_SCALE)), (255, 255, 255), 1)
+			# 		lastPos = (startX * BIG_GRAPH_SCALE + x, int(graphY * BIG_GRAPH_SCALE))
+			# 	except:
+			# 		pass
+				
+			# 	# exit()
+
+			
+
+			k = int(len(graphDots)/3)
+			if k <= 0:
+				startPos = graphDots[0]
+				for pos in graphDots[1:]:
+					cv.line(graphBigImg, (startPos[0] * BIG_GRAPH_SCALE, startPos[1] * BIG_GRAPH_SCALE), 
+										(pos[0] * BIG_GRAPH_SCALE, pos[1] * BIG_GRAPH_SCALE), (255, 255, 255), 1)
+				continue
+				# k = 1
+			# print(graphDots)
+			
+		
+			for i in range(k):
+				firstIndex = 0+i*3
+				lastIndex = 3+i*3
+				if lastIndex >= len(graphDots):
+					lastIndex = len(graphDots) - 1
+
+				startX, endX = graphDots[firstIndex][0], graphDots[lastIndex][0]
+				lastPos = (graphDots[firstIndex][0] * BIG_GRAPH_SCALE, graphDots[firstIndex][1] * BIG_GRAPH_SCALE)
+				for x in range((endX - startX) * BIG_GRAPH_SCALE):
+					# print(graphDots)
+					graphY = self.g(startX + x / BIG_GRAPH_SCALE, graphDots[firstIndex:lastIndex])
+					if graphY == None:
+						startPos = graphDots[firstIndex]
+						for pos in graphDots[firstIndex:lastIndex]:
+							cv.line(graphBigImg, (startPos[0] * BIG_GRAPH_SCALE, startPos[1] * BIG_GRAPH_SCALE), 
+												(pos[0] * BIG_GRAPH_SCALE, pos[1] * BIG_GRAPH_SCALE), (255, 255, 255), 1)
+						break
+					# if graphY == -1:
+					# 	continue
+					# print(x, graphY)
+
+					try:
+						cv.line(graphBigImg, lastPos, (startX * BIG_GRAPH_SCALE + x, int(graphY * BIG_GRAPH_SCALE)), (255, 255, 255), 1)
+						lastPos = (startX * BIG_GRAPH_SCALE + x, int(graphY * BIG_GRAPH_SCALE))
+					except:
+						pass
+			
+				
+
+
 
 		cv.imshow('graph + image', cv.resize(showImg, SHOW_IMG_SHAPE)[:,:,::-1])
 		cv.imshow('graph', cv.resize(graphImg, SHOW_IMG_SHAPE))
 		cv.imshow(f'width {BIG_GRAPH_SCALE}x graph', cv.resize(graphBigImg, SHOW_IMG_SHAPE))
 		cv.imshow(f'width {BIG_GRAPH_SCALE}x graph + simple line', cv.resize(graphBigImg2, SHOW_IMG_SHAPE))
 
-		self.root.title(f"{self.Title} / {self.ScreenWidth} x {self.ScreenHeight} / {round(1/(time.time() - lastTime), 2)} fps")
+		self.root.title(f"{self.Title} / {self.ScreenWidth} x {self.ScreenHeight} / {round(1/(time.time() - lastTime), 2)} fps / {self.DotCount} dots")
 		
 		self.root.update()
 
