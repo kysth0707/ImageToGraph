@@ -10,7 +10,7 @@ import time
 
 
 # 점 몇 칸마다 찍을 지
-dotLimitByDistance = 0
+dotLimitByDistance = 3
 
 # 이미지 노이즈 지울 정도
 IMG_THRESHOLD = 30

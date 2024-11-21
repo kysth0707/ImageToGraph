@@ -11,6 +11,7 @@ import time
 
 
 SHOW_IMG_SHAPE = (600, 600)
+BIG_GRAPH_SCALE = 2
 
 # https://stackoverflow.com/questions/57742442/how-to-get-the-height-of-a-tkinter-window-title-bar
 class BarHeight(Tk):
@@ -83,7 +84,35 @@ class SelectorGUI(BarHeight, RGBChecker):
 
 		self.root.protocol("WM_DELETE_WINDOW", self.onClose)
 		self.root.bind("<Configure>", self.onResize)
-		
+
+	def g(self, x, dots):
+		# 라그랑주 보간법
+		dotSets = set(dots)
+		# print(dots, dotSets)
+		sumOfValue = 0
+		for dot in dots:
+			elseDots = list(dotSets - set([dot]))
+			# print(dots, dot, elseDots)
+			# print(dot, elseDots)
+			# print(i, dotX, dotY)
+			Bunja = 1
+			Bunmo = 1
+			for elses in elseDots:
+				Bunja *= x - elses[0]
+				Bunmo *= dot[0] - elses[0]
+				if Bunmo == 0:
+					return 0
+				# j = x - elses[0]
+				# k = dot[0] - elses[0]
+				# if j != 0:
+				# 	Bunja *= j
+				# if k != 0:
+				# 	Bunmo *= k
+				# print(Bunmo, dot[0], elses)
+			sumOfValue += Bunja / Bunmo * dot[1]
+			# print(Bunja, Bunmo, dot, elseDots, x)
+
+		return sumOfValue
 
 	def isAlive(self):
 		if self.ExitFlag == True:
@@ -128,7 +157,15 @@ class SelectorGUI(BarHeight, RGBChecker):
 		self.Dots = super().GetPixelColorsByPIL(self.ScreenWidth, self.ScreenHeight, self.DotCount, self.ScreenPos, self.BarHeight)
 		originalImg = self.Dots.copy().astype(np.uint8)
 		showImg = originalImg.copy()
+
 		graphImg = np.zeros(showImg.shape)
+		graphBigImg = np.zeros(
+			(showImg.shape[0] * BIG_GRAPH_SCALE, showImg.shape[1] * BIG_GRAPH_SCALE, 3)
+		)
+
+		graphBigImg2 = np.zeros(
+			(showImg.shape[0] * BIG_GRAPH_SCALE, showImg.shape[1] * BIG_GRAPH_SCALE, 3)
+		)
 		
 		# print(convertImg(originalImg))
 		for graphDots in convertImg(originalImg):
@@ -137,17 +174,32 @@ class SelectorGUI(BarHeight, RGBChecker):
 
 				cv.line(showImg, startPos, pos, (255, 255, 255), 1)
 				cv.line(graphImg, startPos, pos, (255, 255, 255), 1)
+				cv.line(graphBigImg2, (startPos[0] * BIG_GRAPH_SCALE, startPos[1] * BIG_GRAPH_SCALE), 
+									  (pos[0] * BIG_GRAPH_SCALE, pos[1] * BIG_GRAPH_SCALE), (255, 255, 255), 1)
 				startPos = pos
+			startX, endX = graphDots[0][0], graphDots[-1][0]
+			startPos = graphDots[0]
+			for x in range((endX - startX) * BIG_GRAPH_SCALE):
+				# print(graphDots)
+				graphY = int(self.g(startX + x / BIG_GRAPH_SCALE, graphDots) * BIG_GRAPH_SCALE)
+				# print(x, graphY)
+				try:
+					cv.line(graphBigImg, (startX * BIG_GRAPH_SCALE + x, graphY), (startX * BIG_GRAPH_SCALE + x, graphY), 255, 1)
+				except:
+					pass
+				# exit()
 
 		cv.imshow('graph + image', cv.resize(showImg, SHOW_IMG_SHAPE)[:,:,::-1])
 		cv.imshow('graph', cv.resize(graphImg, SHOW_IMG_SHAPE))
+		cv.imshow(f'width {BIG_GRAPH_SCALE}x graph', cv.resize(graphBigImg, SHOW_IMG_SHAPE))
+		cv.imshow(f'width {BIG_GRAPH_SCALE}x graph + simple line', cv.resize(graphBigImg2, SHOW_IMG_SHAPE))
 
 		self.root.title(f"{self.Title} / {self.ScreenWidth} x {self.ScreenHeight} / {round(1/(time.time() - lastTime), 2)} fps")
 		
 		self.root.update()
 
 
-MyGUI = SelectorGUI(600, 600, "선택 창", 512)
+MyGUI = SelectorGUI(600, 600, "선택 창", 128)
 
 while True:
 	if not MyGUI.isAlive():
