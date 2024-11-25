@@ -116,6 +116,12 @@ class SelectorGUI(BarHeight, RGBChecker):
 			# print(Bunja, Bunmo, dot, elseDots, x)
 
 		return sumOfValue
+	
+	def g2(self, x, coefficients):
+		sumOfValue = 0
+		for i, co in enumerate(coefficients):
+			sumOfValue += co * (x ** (len(coefficients)-i-1))
+		return sumOfValue
 
 	def isAlive(self):
 		if self.ExitFlag == True:
@@ -219,6 +225,7 @@ class SelectorGUI(BarHeight, RGBChecker):
 				if lastIndex >= len(graphDots):
 					lastIndex = len(graphDots) - 1
 
+				# 라그랑주 보간법
 				startX, endX = graphDots[firstIndex][0], graphDots[lastIndex][0]
 				lastPos = (graphDots[firstIndex][0] * BIG_GRAPH_SCALE, graphDots[firstIndex][1] * BIG_GRAPH_SCALE)
 				for x in range((endX - startX) * BIG_GRAPH_SCALE):
@@ -239,6 +246,8 @@ class SelectorGUI(BarHeight, RGBChecker):
 						lastPos = (startX * BIG_GRAPH_SCALE + x, int(graphY * BIG_GRAPH_SCALE))
 					except:
 						pass
+				
+					
 			
 				
 
